@@ -1,0 +1,52 @@
+services:
+  cass1:
+    image: cassandra:4.1
+    container_name: cass1
+    hostname: cass1
+    environment:
+      CASSANDRA_CLUSTER_NAME: ClusterAngel
+      CASSANDRA_SEEDS: cass1
+      CASSANDRA_DC: dc1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    ports:
+      - "9042:9042"
+    networks: [cassnet]
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+  cass2:
+    image: cassandra:4.1
+    container_name: cass2
+    hostname: cass2
+    environment:
+      CASSANDRA_CLUSTER_NAME: ClusterAngel
+      CASSANDRA_SEEDS: cass1
+      CASSANDRA_DC: dc1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    networks: [cassnet]
+    depends_on:
+      cass1:
+        condition: service_healthy
+  cass3:
+    image: cassandra:4.1
+    container_name: cass3
+    hostname: cass3
+    environment:
+      CASSANDRA_CLUSTER_NAME: ClusterAngel
+      CASSANDRA_SEEDS: cass1
+      CASSANDRA_DC: dc1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    networks: [cassnet]
+    depends_on:
+      cass1:
+        condition: service_healthy
+networks:
+  cassnet:
