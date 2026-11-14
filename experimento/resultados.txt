@@ -1,0 +1,56 @@
+RESULTADOS DEL EXPERIMENTO - TA-IND-01 - Apache Cassandra 4.1
+Usuario: mourad\angel   Equipo: Mourad   Fecha: 14/11/2026
+
+== 1. Arranque del clúster (7:38 - 7:44) ==
+7:38:18  nodetool status: solo cass1 (172.20.0.2) en UN.
+7:38:46  cass2 (172.20.0.4) en UJ (uniéndose).
+docker ps -a: cass3  Exited (3)  -> intentó unirse a la vez que cass2.
+docker start cass3
+7:44:23  nodetool status:
+UN  172.20.0.3  141.69 KiB  16  76.0%  5860c33b-60ff-4a40-b2e5-0d498f0b0dc1  rack1
+UN  172.20.0.4   70.22 KiB  16  59.3%  f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  109.39 KiB  16  64.7%  9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+Logs de cass3: conexiones entre nodos por el puerto 7000 (SMALL_MESSAGES, LARGE_MESSAGES, URGENT_MESSAGES)
+y "Starting listening for CQL clients on /0.0.0.0:9042".
+
+== 2. Datos cargados con CONSISTENCY ALL (7:45:16) ==
+ id | asiento | pasajero       | vuelo
+  1 |     12A | Angel Zambrano | GYE-UIO 102
+  2 |      3C |    Prueba UTEQ | UIO-GYE 205
+
+nodetool status uteq (RF = 3):
+UN  172.20.0.3  164.2 KiB  16  100.0%
+UN  172.20.0.4  92.65 KiB  16  100.0%
+UN  172.20.0.2  80.71 KiB  16  100.0%
+
+== 3. Fallo de un nodo: docker stop cass3 (7:45:40) ==
+DN  172.20.0.3  164.2 KiB  16  100.0%
+UN  172.20.0.4  92.65 KiB  16  100.0%
+UN  172.20.0.2  80.71 KiB  16  100.0%
+
+Lecturas con 2 de 3 réplicas vivas:
+ONE     -> devuelve la fila (7:47:02). Request complete: 3709 us (ver one.txt)
+QUORUM  -> devuelve la fila (7:47:09). El tracing no se pudo leer:
+           "Cannot achieve consistency level QUORUM" required_replicas: 2, alive_replicas: 1
+           (el keyspace system_traces tiene factor de replicación 2, no 3)
+ALL     -> error (7:47:26):
+           "Cannot achieve consistency level ALL" required_replicas: 3, alive_replicas: 2
+
+== 4. Recuperación ==
+docker start cass3 -> los 3 nodos vuelven a UN (7:49).
+
+== 5. Latencia de lectura con los 3 nodos activos, en microsegundos ==
+Prueba inicial (7:49:43):  ONE 1640  QUORUM 6995  ALL 13678
+
+Cinco rondas (7:50:36), guardadas en latencias.txt:
+Ronda 1  ONE 1297  QUORUM 4011  ALL 6111
+Ronda 2  ONE 1141  QUORUM 3611  ALL 6010
+Ronda 3  ONE 1333  QUORUM 3789  ALL 4650
+Ronda 4  ONE 1224  QUORUM 4255  ALL 4163
+Ronda 5  ONE 1194  QUORUM 3448  ALL 5129
+
+Nivel    Promedio  Mínimo  Máximo  Desv. est.
+ONE        1237.8    1141    1333      77.5
+QUORUM     3822.8    3448    4255     319.6
+ALL        5212.6    4163    6111     846.8

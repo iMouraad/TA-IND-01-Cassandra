@@ -1,0 +1,510 @@
+Windows PowerShell 5.1
+Copyright (C) Microsoft Corporation. Todos los derechos reservados.
+
+PS C:\WINDOWS\system32> cd C:\Users\TuUsuario\TA-IND-01\experimento
+>> whoami; hostname; Get-Date
+>> docker compose up -d
+cd : No se encuentra la ruta de acceso 'C:\Users\TuUsuario\TA-IND-01\experimento' porque no existe.
+En línea: 1 Carácter: 1
++ cd C:\Users\TuUsuario\TA-IND-01\experimento
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\TuUsuario\TA-IND-01\experimento:String) [Set-Location], ItemNo
+   tFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:33:29
+no configuration file provided: not found
+
+
+PS C:\WINDOWS\system32> cd C:\Users\angel\TA-IND-01\experimento
+>> whoami; hostname; Get-Date
+>> docker compose up -d
+cd : No se encuentra la ruta de acceso 'C:\Users\angel\TA-IND-01\experimento' porque no existe.
+En línea: 1 Carácter: 1
++ cd C:\Users\angel\TA-IND-01\experimento
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\angel\TA-IND-01\experimento:String) [Set-Location], ItemNotFou
+   ndException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:34:08
+no configuration file provided: not found
+
+
+PS C:\WINDOWS\system32> cd C:\Users\angel\TA-IND-01\experimento
+>> whoami; hostname; Get-Date
+>> docker compose up -d
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:35:07
+no configuration file provided: not found
+
+
+PS C:\Users\angel\TA-IND-01\experimento> cd C:\Users\angel\TA-IND-01\experimento
+>>
+>> $compose = @'
+>> services:
+>>   cass1:
+>>     image: cassandra:4.1
+>>     container_name: cass1
+>>     hostname: cass1
+>>     environment:
+>>       CASSANDRA_CLUSTER_NAME: ClusterAngel
+>>       CASSANDRA_SEEDS: cass1
+>>       CASSANDRA_DC: dc1
+>>       CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+>>       MAX_HEAP_SIZE: 512M
+>>       HEAP_NEWSIZE: 128M
+>>     ports:
+>>       - "9042:9042"
+>>     networks: [cassnet]
+>>     healthcheck:
+>>       test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+>>       interval: 15s
+>>       timeout: 10s
+>>       retries: 20
+>>   cass2:
+>>     image: cassandra:4.1
+>>     container_name: cass2
+>>     hostname: cass2
+>>     environment:
+>>       CASSANDRA_CLUSTER_NAME: ClusterAngel
+>>       CASSANDRA_SEEDS: cass1
+>>       CASSANDRA_DC: dc1
+>>       CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+>>       MAX_HEAP_SIZE: 512M
+>>       HEAP_NEWSIZE: 128M
+>>     networks: [cassnet]
+>>     depends_on:
+>>       cass1:
+>>         condition: service_healthy
+>>   cass3:
+>>     image: cassandra:4.1
+>>     container_name: cass3
+>>     hostname: cass3
+>>     environment:
+>>       CASSANDRA_CLUSTER_NAME: ClusterAngel
+>>       CASSANDRA_SEEDS: cass1
+>>       CASSANDRA_DC: dc1
+>>       CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+>>       MAX_HEAP_SIZE: 512M
+>>       HEAP_NEWSIZE: 128M
+>>     networks: [cassnet]
+>>     depends_on:
+>>       cass1:
+>>         condition: service_healthy
+>> networks:
+>>   cassnet:
+>> '@
+>>
+>> $cql = @'
+>> CREATE KEYSPACE IF NOT EXISTS uteq
+>>   WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1': 3};
+>> USE uteq;
+>> CREATE TABLE IF NOT EXISTS reservas (id int PRIMARY KEY, pasajero text, vuelo text, asiento text);
+>> CONSISTENCY ALL;
+>> INSERT INTO reservas (id, pasajero, vuelo, asiento) VALUES (1, 'Angel Zambrano', 'GYE-UIO 102', '12A');
+>> INSERT INTO reservas (id, pasajero, vuelo, asiento) VALUES (2, 'Prueba UTEQ', 'UIO-GYE 205', '3C');
+>> SELECT * FROM reservas;
+>> '@
+>>
+>> [IO.File]::WriteAllText("$PWD\docker-compose.yml", $compose)
+>> [IO.File]::WriteAllText("$PWD\experimento.cql", $cql)
+>> dir
+
+
+    Directorio: C:\Users\angel\TA-IND-01\experimento
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        14/11/2026      7:36           1319 docker-compose.yml
+-a----        14/11/2026      7:36            457 experimento.cql
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker compose up -d
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:36:52
+[+] Running 13/13
+ ✔ cass2 Pulled                                                                                                   16.3s
+   ✔ 2bc393306f2e Pull complete                                                                                    0.4s
+   ✔ a149a454c654 Pull complete                                                                                    0.4s
+   ✔ dd051e1b8c92 Pull complete                                                                                    8.6s
+   ✔ 9f5459606ec7 Pull complete                                                                                    9.5s
+   ✔ 78b6bb88098d Pull complete                                                                                    8.7s
+   ✔ c1b0e6965d8a Pull complete                                                                                   14.3s
+   ✔ 63496f14320d Pull complete                                                                                    9.5s
+   ✔ 62d50de06d35 Pull complete                                                                                   14.6s
+ ✔ cass3 Pulled                                                                                                   16.6s
+   ✔ 8697c24e8c82 Download complete                                                                                0.0s
+   ✔ e3e48ad1c9c2 Download complete                                                                                0.8s
+ ✔ cass1 Pulled                                                                                                   16.6s
+[+] Running 4/4
+ ✔ Network experimento_cassnet  Created                                                                            0.0s
+ ✔ Container cass1              Healthy                                                                           63.4s
+ ✔ Container cass3              Started                                                                           62.5s
+ ✔ Container cass2              Started                                                                           62.6s
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker ps
+>> docker exec cass1 nodetool status
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:38:18
+CONTAINER ID   IMAGE                COMMAND                  CREATED              STATUS                        PORTS                                         NAMES
+6e3618259fea   cassandra:4.1        "docker-entrypoint.s…"   About a minute ago   Up 5 seconds                  7000-7001/tcp, 7199/tcp, 9042/tcp, 9160/tcp   cass2
+3605cbd31636   cassandra:4.1        "docker-entrypoint.s…"   About a minute ago   Up 5 seconds                  7000-7001/tcp, 7199/tcp, 9042/tcp, 9160/tcp   cass3
+f4d8a5efb520   cassandra:4.1        "docker-entrypoint.s…"   About a minute ago   Up About a minute (healthy)   0.0.0.0:9042->9042/tcp, [::]:9042->9042/tcp   cass1
+718770bbaade   postgres:17-alpine   "docker-entrypoint.s…"   3 weeks ago          Up 6 minutes (healthy)        127.0.0.1:5434->5432/tcp                      gurit-calidad-db-1
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load        Tokens  Owns (effective)  Host ID                               Rack
+UN  172.20.0.2  104.33 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker exec cass1 nodetool status
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:38:46
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load        Tokens  Owns (effective)  Host ID                               Rack
+UJ  172.20.0.4  30.43 KiB   16      ?                 f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  104.33 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> docker start cass2
+cass2
+PS C:\Users\angel\TA-IND-01\experimento> docker exec cass1 nodetool status
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load        Tokens  Owns (effective)  Host ID                               Rack
+UN  172.20.0.4  70.22 KiB   16      100.0%            f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  109.39 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+PS C:\Users\angel\TA-IND-01\experimento> docker ps -a
+CONTAINER ID   IMAGE                           COMMAND                  CREATED         STATUS                        PORTS                                         NAMES
+6e3618259fea   cassandra:4.1                   "docker-entrypoint.s…"   4 minutes ago   Up 3 minutes                  7000-7001/tcp, 7199/tcp, 9042/tcp, 9160/tcp   cass2
+3605cbd31636   cassandra:4.1                   "docker-entrypoint.s…"   4 minutes ago   Exited (3) 3 minutes ago                                                    cass3
+f4d8a5efb520   cassandra:4.1                   "docker-entrypoint.s…"   4 minutes ago   Up 4 minutes (healthy)        0.0.0.0:9042->9042/tcp, [::]:9042->9042/tcp   cass1
+c04d14ee6984   gurit-calidad-backend:latest    "gunicorn config.wsg…"   3 weeks ago     Exited (1) 3 weeks ago                                                      elastic_meninsky
+511dd99215ba   gurit-calidad-frontend:latest   "docker-entrypoint.s…"   3 weeks ago     Exited (255) 12 minutes ago   5173/tcp                                      vibrant_almeida
+6e8cb835ef0d   gurit-calidad-frontend          "docker-entrypoint.s…"   3 weeks ago     Exited (255) 12 minutes ago   127.0.0.1:5173->5173/tcp                      gurit-calidad-frontend-1
+1fa1609cf5d9   gurit-calidad-backend           "sh -c 'python manag…"   3 weeks ago     Exited (255) 12 minutes ago   127.0.0.1:8001->8000/tcp                      gurit-calidad-backend-1
+718770bbaade   postgres:17-alpine              "docker-entrypoint.s…"   3 weeks ago     Up 9 minutes (healthy)        127.0.0.1:5434->5432/tcp                      gurit-calidad-db-1
+2f5618100fc1   nexo-bi-ropav-app               "python app.py"          2 months ago    Exited (137) 3 weeks ago                                                    nexo-bi-ropav-app-1
+617f055dda30   postgres:18                     "docker-entrypoint.s…"   2 months ago    Exited (0) 3 weeks ago                                                      nexo-bi-ropav-db-1
+PS C:\Users\angel\TA-IND-01\experimento> docker start cass3
+cass3
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker exec cass1 nodetool status
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:42:23
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load        Tokens  Owns (effective)  Host ID                               Rack
+UN  172.20.0.4  70.22 KiB   16      100.0%            f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  109.39 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker exec cass1 nodetool status
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:44:23
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load        Tokens  Owns (effective)  Host ID                               Rack
+UN  172.20.0.3  141.69 KiB  16      76.0%             5860c33b-60ff-4a40-b2e5-0d498f0b0dc1  rack1
+UN  172.20.0.4  70.22 KiB   16      59.3%             f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  109.39 KiB  16      64.7%             9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> docker logs cass3 --tail 30
+INFO  [Messaging-EventLoop-3-1] 2026-11-14 12:43:25,995 OutboundConnection.java:1153 - /172.20.0.3:7000(/172.20.0.3:38574)->cass1/172.20.0.2:7000-SMALL_MESSAGES-a35af30e successfully connected, version = 12, framing = CRC, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-2] 2026-11-14 12:43:25,995 OutboundConnection.java:1153 - /172.20.0.3:7000(/172.20.0.3:38582)->cass1/172.20.0.2:7000-LARGE_MESSAGES-25b0c6da successfully connected, version = 12, framing = CRC, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-6] 2026-11-14 12:43:25,996 OutboundConnection.java:1153 - /172.20.0.3:7000(/172.20.0.3:55248)->/172.20.0.4:7000-SMALL_MESSAGES-41b682bb successfully connected, version = 12, framing = LZ4, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-7] 2026-11-14 12:43:25,996 OutboundConnection.java:1153 - /172.20.0.3:7000(/172.20.0.3:55264)->/172.20.0.4:7000-LARGE_MESSAGES-cfad263f successfully connected, version = 12, framing = LZ4, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-10] 2026-11-14 12:43:25,999 InboundConnectionInitiator.java:536 - /172.20.0.2:7000(/172.20.0.2:33896)->/172.20.0.3:7000-SMALL_MESSAGES-47faba3c messaging connection established, version = 12, framing = LZ4, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-11] 2026-11-14 12:43:26,000 InboundConnectionInitiator.java:536 - /172.20.0.4:7000(/172.20.0.4:56654)->/172.20.0.3:7000-SMALL_MESSAGES-d6024b15 messaging connection established, version = 12, framing = CRC, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-12] 2026-11-14 12:43:26,003 InboundConnectionInitiator.java:536 - /172.20.0.4:7000(/172.20.0.4:56658)->/172.20.0.3:7000-LARGE_MESSAGES-d949ca34 messaging connection established, version = 12, framing = CRC, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-13] 2026-11-14 12:43:26,003 InboundConnectionInitiator.java:536 - /172.20.0.2:7000(/172.20.0.2:33898)->/172.20.0.3:7000-LARGE_MESSAGES-cb9741d6 messaging connection established, version = 12, framing = LZ4, encryption = unencrypted
+INFO  [main] 2026-11-14 12:43:26,005 StartupClusterConnectivityChecker.java:181 - Ensured sufficient healthy connections with [dc1] after 13 milliseconds
+INFO  [CompactionExecutor:1] 2026-11-14 12:43:26,008 CompactionTask.java:173 - Compacting (fc37b920-e028-11f1-9795-85c44aa23c33) [/var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-4-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-5-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-3-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-2-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-7-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-12-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-6-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-11-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-9-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-8-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-10-big-Data.db:level=0, /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-1-big-Data.db:level=0, ]
+INFO  [main] 2026-11-14 12:43:26,013 NativeTransportService.java:130 - Using Netty Version: [netty-buffer=netty-buffer-4.1.58.Final.10b03e6, netty-codec=netty-codec-4.1.58.Final.10b03e6, netty-codec-dns=netty-codec-dns-4.1.58.Final.10b03e6, netty-codec-haproxy=netty-codec-haproxy-4.1.58.Final.10b03e6, netty-codec-http=netty-codec-http-4.1.58.Final.10b03e6, netty-codec-http2=netty-codec-http2-4.1.58.Final.10b03e6, netty-codec-memcache=netty-codec-memcache-4.1.58.Final.10b03e6, netty-codec-mqtt=netty-codec-mqtt-4.1.58.Final.10b03e6, netty-codec-redis=netty-codec-redis-4.1.58.Final.10b03e6, netty-codec-smtp=netty-codec-smtp-4.1.58.Final.10b03e6, netty-codec-socks=netty-codec-socks-4.1.58.Final.10b03e6, netty-codec-stomp=netty-codec-stomp-4.1.58.Final.10b03e6, netty-codec-xml=netty-codec-xml-4.1.58.Final.10b03e6, netty-common=netty-common-4.1.58.Final.10b03e6, netty-handler=netty-handler-4.1.58.Final.10b03e6, netty-handler-proxy=netty-handler-proxy-4.1.58.Final.10b03e6, netty-resolver=netty-resolver-4.1.58.Final.10b03e6, netty-resolver-dns=netty-resolver-dns-4.1.58.Final.10b03e6, netty-resolver-dns-native-macos=netty-resolver-dns-native-macos-4.1.58.Final.10b03e65f1, netty-transport=netty-transport-4.1.58.Final.10b03e6, netty-transport-native-epoll=netty-transport-native-epoll-4.1.58.Final.10b03e6, netty-transport-native-kqueue=netty-transport-native-kqueue-4.1.58.Final.10b03e65f1, netty-transport-native-unix-common=netty-transport-native-unix-common-4.1.58.Final.10b03e6, netty-transport-rxtx=netty-transport-rxtx-4.1.58.Final.10b03e6, netty-transport-sctp=netty-transport-sctp-4.1.58.Final.10b03e6, netty-transport-udt=netty-transport-udt-4.1.58.Final.10b03e6]
+INFO  [main] 2026-11-14 12:43:26,057 NativeTransportService.java:68 - Netty using native Epoll event loop
+INFO  [main] 2026-11-14 12:43:26,076 PipelineConfigurator.java:145 - Using Netty Version: [netty-buffer=netty-buffer-4.1.58.Final.10b03e6, netty-codec=netty-codec-4.1.58.Final.10b03e6, netty-codec-dns=netty-codec-dns-4.1.58.Final.10b03e6, netty-codec-haproxy=netty-codec-haproxy-4.1.58.Final.10b03e6, netty-codec-http=netty-codec-http-4.1.58.Final.10b03e6, netty-codec-http2=netty-codec-http2-4.1.58.Final.10b03e6, netty-codec-memcache=netty-codec-memcache-4.1.58.Final.10b03e6, netty-codec-mqtt=netty-codec-mqtt-4.1.58.Final.10b03e6, netty-codec-redis=netty-codec-redis-4.1.58.Final.10b03e6, netty-codec-smtp=netty-codec-smtp-4.1.58.Final.10b03e6, netty-codec-socks=netty-codec-socks-4.1.58.Final.10b03e6, netty-codec-stomp=netty-codec-stomp-4.1.58.Final.10b03e6, netty-codec-xml=netty-codec-xml-4.1.58.Final.10b03e6, netty-common=netty-common-4.1.58.Final.10b03e6, netty-handler=netty-handler-4.1.58.Final.10b03e6, netty-handler-proxy=netty-handler-proxy-4.1.58.Final.10b03e6, netty-resolver=netty-resolver-4.1.58.Final.10b03e6, netty-resolver-dns=netty-resolver-dns-4.1.58.Final.10b03e6, netty-resolver-dns-native-macos=netty-resolver-dns-native-macos-4.1.58.Final.10b03e65f1, netty-transport=netty-transport-4.1.58.Final.10b03e6, netty-transport-native-epoll=netty-transport-native-epoll-4.1.58.Final.10b03e6, netty-transport-native-kqueue=netty-transport-native-kqueue-4.1.58.Final.10b03e65f1, netty-transport-native-unix-common=netty-transport-native-unix-common-4.1.58.Final.10b03e6, netty-transport-rxtx=netty-transport-rxtx-4.1.58.Final.10b03e6, netty-transport-sctp=netty-transport-sctp-4.1.58.Final.10b03e6, netty-transport-udt=netty-transport-udt-4.1.58.Final.10b03e6]
+INFO  [main] 2026-11-14 12:43:26,076 PipelineConfigurator.java:146 - Starting listening for CQL clients on /0.0.0.0:9042 (unencrypted)...
+INFO  [main] 2026-11-14 12:43:26,079 CassandraDaemon.java:761 - Startup complete
+INFO  [CompactionExecutor:1] 2026-11-14 12:43:26,121 CompactionTask.java:270 - Compacted (fc37b920-e028-11f1-9795-85c44aa23c33) 12 sstables to [/var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-13-big,] to level=0.  1.552KiB to 0.696KiB (~44% of original) in 111ms.  Read Throughput = 13.966KiB/s, Write Throughput = 6.267KiB/s, Row Throughput = ~2/s.  12 total partitions merged to 1.  Partition merge counts were {12:1, }. Time spent writing keys = 57ms
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,122 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-4-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,124 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-5-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,125 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-3-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,126 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-2-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,127 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-7-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,128 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-6-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,130 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-9-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,131 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-8-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,132 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-10-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,133 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-12-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,134 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-11-big
+INFO  [NonPeriodicTasks:1] 2026-11-14 12:43:26,135 SSTable.java:127 - Deleting sstable: /var/lib/cassandra/data/system/local-7ad54392bcdd35a684174e047860b377/nb-1-big
+INFO  [Messaging-EventLoop-3-14] 2026-11-14 12:44:18,894 InboundConnectionInitiator.java:536 - /172.20.0.2:7000(/172.20.0.2:59328)->/172.20.0.3:7000-URGENT_MESSAGES-081c6069 messaging connection established, version = 12, framing = CRC, encryption = unencrypted
+INFO  [Messaging-EventLoop-3-15] 2026-11-14 12:44:20,566 InboundConnectionInitiator.java:536 - /172.20.0.4:7000(/172.20.0.4:47634)->/172.20.0.3:7000-URGENT_MESSAGES-fda88efa messaging connection established, version = 12, framing = CRC, encryption = unencrypted
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> Get-Content experimento.cql | docker exec -i cass1 cqlsh
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:45:16
+Consistency level set to ALL.
+
+ id | asiento | pasajero       | vuelo
+----+---------+----------------+-------------
+  1 |     12A | Angel Zambrano | GYE-UIO 102
+  2 |      3C |    Prueba UTEQ | UIO-GYE 205
+
+(2 rows)
+
+
+PS C:\Users\angel\TA-IND-01\experimento> docker exec cass1 nodetool status uteq
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load       Tokens  Owns (effective)  Host ID                               Rack
+UN  172.20.0.3  164.2 KiB  16      100.0%            5860c33b-60ff-4a40-b2e5-0d498f0b0dc1  rack1
+UN  172.20.0.4  92.65 KiB  16      100.0%            f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  80.71 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker stop cass3
+>> docker exec cass1 nodetool status
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:45:40
+cass3
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load       Tokens  Owns (effective)  Host ID                               Rack
+DN  172.20.0.3  164.2 KiB  16      100.0%            5860c33b-60ff-4a40-b2e5-0d498f0b0dc1  rack1
+UN  172.20.0.4  92.65 KiB  16      100.0%            f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  80.71 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker exec cass1 cqlsh -e "CONSISTENCY ONE; TRACING ON; SELECT * FROM uteq.reservas WHERE id = 1;" | Tee-Object -FilePath one.txt
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:47:02
+Consistency level set to ONE.
+Now Tracing is enabled
+
+ id | asiento | pasajero       | vuelo
+----+---------+----------------+-------------
+  1 |     12A | Angel Zambrano | GYE-UIO 102
+
+(1 rows)
+
+Tracing session: 7db215e0-e029-11f1-8450-c50d7840b42f
+
+ activity                                                                         | timestamp                  | source     | source_elapsed | client
+----------------------------------------------------------------------------------+----------------------------+------------+----------------+-----------
+                                                               Execute CQL3 query | 2026-11-14 12:47:03.231000 | 172.20.0.2 |              0 | 127.0.0.1
+ Parsing SELECT * FROM uteq.reservas WHERE id = 1; [Native-Transport-Requests-13] | 2026-11-14 12:47:03.233000 | 172.20.0.2 |           2262 | 127.0.0.1
+                               Preparing statement [Native-Transport-Requests-13] | 2026-11-14 12:47:03.234000 | 172.20.0.2 |           2542 | 127.0.0.1
+                      Executing single-partition query on reservas [ReadStage-16] | 2026-11-14 12:47:03.234001 | 172.20.0.2 |           3168 | 127.0.0.1
+                                      Acquiring sstable references [ReadStage-16] | 2026-11-14 12:47:03.234002 | 172.20.0.2 |           3279 | 127.0.0.1
+                                         Merging memtable contents [ReadStage-16] | 2026-11-14 12:47:03.234003 | 172.20.0.2 |           3324 | 127.0.0.1
+                            Read 1 live rows and 0 tombstone cells [ReadStage-16] | 2026-11-14 12:47:03.235000 | 172.20.0.2 |           3483 | 127.0.0.1
+                                                                 Request complete | 2026-11-14 12:47:03.234709 | 172.20.0.2 |           3709 | 127.0.0.1
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker exec cass1 cqlsh -e "CONSISTENCY QUORUM; TRACING ON; SELECT * FROM uteq.reservas WHERE id = 1;" | Tee-Object -FilePath quorum.txt
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:47:09
+Consistency level set to QUORUM.
+Now Tracing is enabled
+
+ id | asiento | pasajero       | vuelo
+----+---------+----------------+-------------<stdin>:1:Unable to fetch query trace: ('Unable to complete the operation against any hosts', {<Host: 127.0.0.1:9042 dc1>: Unavailable('Error from server: code=1000 [Unavailable exception] message="Cannot achieve consistency level QUORUM" info={\'consistency\': \'QUORUM\', \'required_replicas\': 2, \'alive_replicas\': 1}')})
+
+  1 |     12A | Angel Zambrano | GYE-UIO 102
+
+(1 rows)
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> docker exec cass1 cqlsh -e "CONSISTENCY ALL; TRACING ON; SELECT * FROM uteq.reservas WHERE id = 1;" 2>&1 | Tee-Object -FilePath all.txt
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:47:26
+Consistency level set to ALL.
+Now Tracing is enabled
+docker : <stdin>:1:NoHostAvailable: ('Unable to complete the operation against any hosts', {<Host: 127.0.0.1:9042
+dc1>: Unavailable('Error from server: code=1000 [Unavailable exception] message="Cannot achieve consistency level ALL"
+info={\'consistency\': \'ALL\', \'required_replicas\': 3, \'alive_replicas\': 2}')})
+En línea: 2 Carácter: 1
++ docker exec cass1 cqlsh -e "CONSISTENCY ALL; TRACING ON; SELECT * FRO ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<stdin>:1:NoHos...licas\': 2}')}):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> docker start cass3
+cass3
+PS C:\Users\angel\TA-IND-01\experimento> docker exec cass1 nodetool status
+Datacenter: dc1
+===============
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address     Load       Tokens  Owns (effective)  Host ID                               Rack
+UN  172.20.0.3  164.2 KiB  16      100.0%            5860c33b-60ff-4a40-b2e5-0d498f0b0dc1  rack1
+UN  172.20.0.4  92.65 KiB  16      100.0%            f3fca51a-a488-4c11-b1ae-f872b7cbb469  rack1
+UN  172.20.0.2  80.71 KiB  16      100.0%            9cf410cf-40c1-4e08-b252-4f7f4261edc1  rack1
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> foreach ($c in "ONE","QUORUM","ALL") { docker exec cass1 cqlsh -e "CONSISTENCY $c; TRACING ON; SELECT * FROM uteq.reservas WHERE id = 1;" | Select-String "Consistency level|Request complete" }
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:49:43
+
+IgnoreCase : True
+LineNumber : 1
+Line       : Consistency level set to ONE.
+Filename   : InputStream
+Path       : InputStream
+Pattern    : Consistency level|Request complete
+Context    :
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 21
+Line       :                                                                  Request complete | 2026-11-14
+             12:49:43.993640 | 172.20.0.2 |           1640 | 127.0.0.1
+Filename   : InputStream
+Path       : InputStream
+Pattern    : Consistency level|Request complete
+Context    :
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 1
+Line       : Consistency level set to QUORUM.
+Filename   : InputStream
+Path       : InputStream
+Pattern    : Consistency level|Request complete
+Context    :
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 31
+Line       :                                                                              Request complete |
+             2026-11-14 12:49:44.512995 | 172.20.0.2 |           6995 | 127.0.0.1
+Filename   : InputStream
+Path       : InputStream
+Pattern    : Consistency level|Request complete
+Context    :
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 1
+Line       : Consistency level set to ALL.
+Filename   : InputStream
+Path       : InputStream
+Pattern    : Consistency level|Request complete
+Context    :
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 36
+Line       :                                                                                   Request complete |
+             2026-11-14 12:49:45.040678 | 172.20.0.2 |          13678 | 127.0.0.1
+Filename   : InputStream
+Path       : InputStream
+Pattern    : Consistency level|Request complete
+Context    :
+Matches    : {0}
+
+
+
+PS C:\Users\angel\TA-IND-01\experimento> whoami; hostname; Get-Date
+>> 1..5 | ForEach-Object {
+>>   $r = $_
+>>   foreach ($c in "ONE","QUORUM","ALL") {
+>>     $out = docker exec cass1 cqlsh -e "CONSISTENCY $c; TRACING ON; SELECT * FROM uteq.reservas WHERE id = 1;"
+>>     $us = ($out | Select-String "Request complete").Line.Split("|")[3].Trim()
+>>     "Ronda $r  $c  $us us"
+>>   }
+>> } | Tee-Object -FilePath latencias.txt
+mourad\angel
+Mourad
+
+sábado, 14 de noviembre de 2026 7:50:36
+Ronda 1  ONE  1297 us
+Ronda 1  QUORUM  4011 us
+Ronda 1  ALL  6111 us
+Ronda 2  ONE  1141 us
+Ronda 2  QUORUM  3611 us
+Ronda 2  ALL  6010 us
+Ronda 3  ONE  1333 us
+Ronda 3  QUORUM  3789 us
+Ronda 3  ALL  4650 us
+Ronda 4  ONE  1224 us
+Ronda 4  QUORUM  4255 us
+Ronda 4  ALL  4163 us
+Ronda 5  ONE  1194 us
+Ronda 5  QUORUM  3448 us
+Ronda 5  ALL  5129 us
+
+
+PS C:\Users\angel\TA-IND-01\experimento>
+
