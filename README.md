@@ -14,7 +14,7 @@ Entrega: 15/11/2026
 
 Enlace: https://drive.google.com/drive/folders/15S5Df3tTCRJATuwl1qYeOe5zAb71ko1T?usp=drive_link
 
-Duración aproximada: 4 minutos. Explico el clúster de tres nodos, la prueba con un nodo caído (ONE y QUORUM responden, ALL falla) y lo que concluí sobre consistencia y latencia.
+Duración aproximada: 3 minutos. Explico el clúster de tres nodos, la prueba con un nodo caído (ONE y QUORUM responden, ALL falla) y lo que concluí sobre consistencia y latencia.
 ## Estructura del repositorio
 
 | Carpeta o archivo | Contenido |
