@@ -35,7 +35,7 @@
   \vspace{0.3cm}
   {\bfseries Actividad:} TA-IND-01, Informe académico individual\par
   \vspace{0.6cm}
-  {\Large\bfseries Análisis crítico de Apache Cassandra frente a MongoDB\par}
+  {\Large\bfseries Análisis crítico de Apache Cassandra frente a Apache HBase\par}
   \vspace{1.2cm}
   {\bfseries Docente:} Ing. Gleiston Cicerón Guerrero Ulloa\par
   \vspace{0.3cm}
@@ -54,7 +54,8 @@
 % ------------------------------------------------------------ RESUMEN
 \section*{Resumen}
 
-Este informe analiza Apache Cassandra, una base de datos NoSQL distribuida sin nodo maestro, y la compara con MongoDB usando los conceptos de la Unidad 1: transparencias de distribución, CAP y PACELC, modelos de comunicación y tolerancia a fallos. El análisis combina seis artículos científicos publicados entre 2021 y 2025 con un experimento propio. En mi computadora levanté con Docker un clúster de tres nodos de Cassandra 4.1, con factor de replicación 3, y probé dos cosas. Primero apagué un nodo y leí la misma fila con los niveles de consistencia ONE, QUORUM y ALL: los dos primeros siguieron respondiendo y ALL devolvió un error porque solo había dos réplicas vivas. Después, con los tres nodos activos, medí cinco veces la latencia de cada nivel. QUORUM tardó en promedio unas 3 veces más que ONE y ALL unas 4 veces más. De estos resultados saco dos conclusiones. En Cassandra el equilibrio entre consistencia y disponibilidad lo decide cada consulta según el nivel que pide el cliente, y no el sistema completo. Además, esa consistencia más fuerte tiene un costo en tiempo que se nota incluso cuando los tres nodos corren en la misma máquina.
+
+Este informe analiza Apache Cassandra, una base de datos NoSQL distribuida sin nodo maestro, y la compara con Apache HBase usando los conceptos de la Unidad 1: transparencias de distribución, CAP y PACELC, modelos de comunicación y tolerancia a fallos. El análisis combina ocho artículos científicos publicados entre 2021 y 2025 con un experimento propio. En mi computadora levanté con Docker un clúster de tres nodos de Cassandra 4.1, con factor de replicación 3, y probé dos cosas. Primero apagué un nodo y leí la misma fila con los niveles de consistencia ONE, QUORUM y ALL: los dos primeros siguieron respondiendo y ALL devolvió un error porque solo había dos réplicas vivas. Después, con los tres nodos activos, medí cinco veces la latencia de cada nivel. QUORUM tardó en promedio unas 3 veces más que ONE y ALL unas 4 veces más. De estos resultados saco dos conclusiones. En Cassandra el equilibrio entre consistencia y disponibilidad lo decide cada consulta según el nivel que pide el cliente, y no el sistema completo. Además, esa consistencia más fuerte tiene un costo en tiempo que se nota incluso cuando los tres nodos corren en la misma máquina.
 
 % ------------------------------------------------------------ 1
 \section{Introducción}
@@ -62,7 +63,7 @@ Cuando una aplicación tiene muchos usuarios escribiendo datos al mismo tiempo, 
 
 Ferreira et al. incluyen a Cassandra, junto con MongoDB y Redis, entre las bases NoSQL de uso extendido, y las evalúan en la nube con réplicas en una y en varias regiones \cite{ferreira2024impacts}. Gorbenko et al. también la prueban en Amazon Web Services, con réplicas repartidas en distintas regiones del mundo \cite{gorbenko2021performance}, que es el tipo de despliegue para el que fue diseñada. En esos trabajos se mide cuánto rendimiento se pierde al pedir consistencia fuerte, comparando estas bases con distintos niveles de consistencia \cite{ferreira2025experimental,ferreira2025benchmarking}; en Cassandra, por ejemplo, las operaciones por segundo pueden caer hasta un 95\,\% con consistencia fuerte \cite{ferreira2025benchmarking}.
 
-Elegí Cassandra porque deja escoger el nivel de consistencia en cada consulta, y con eso pude probar CAP y PACELC en un experimento pequeño, en mi propia computadora. Con Docker levanté un clúster de tres nodos, apagué uno para ver qué niveles seguían respondiendo y medí cuánto tarda la misma lectura con ONE, QUORUM y ALL. Para comparar uso MongoDB, que resuelve los mismos problemas con otra arquitectura, basada en un nodo primario. Los comandos, las salidas y las capturas están en el repositorio.
+Elegí Cassandra porque deja escoger el nivel de consistencia en cada consulta, y con eso pude probar CAP y PACELC en un experimento pequeño, en mi propia computadora. Con Docker levanté un clúster de tres nodos, apagué uno para ver qué niveles seguían respondiendo y medí cuánto tarda la misma lectura con ONE, QUORUM y ALL. Para comparar elegí Apache HBase, que también guarda los datos en columnas y forma parte del ecosistema Hadoop \cite{tsai2022time}, pero toma el camino contrario en consistencia \cite[p.~172]{ahmed2023consistency}. Los comandos, las salidas y las capturas están en el repositorio.
 % ------------------------------------------------------------ 2
 \section{Arquitectura del sistema}
 \label{sec:arquitectura}
@@ -81,15 +82,6 @@ Cuando un cliente se conecta, el nodo que recibe la consulta hace de coordinador
 \end{figure}
 
 En el esquema a mano (Anexo A) no había anotado la IP de cass1 ni los puertos 7000 y 9042; los agregué en el diagrama de la Figura~\ref{fig:arquitectura} después de revisar los logs y \texttt{docker ps}.
-
-% CUANDO TENGAS EL DIAGRAMA: sube figuras/arquitectura.png, descomenta la figura y agrega
-% una o dos frases sobre qué cambiaste del esquema a mano (Anexo A) al diagrama de draw.io.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.9\textwidth]{figuras/arquitectura.png}
-%   \caption{Arquitectura del clúster de Cassandra usado en el experimento (elaboración propia).}
-%   \label{fig:arquitectura}
-% \end{figure}
 
 % ------------------------------------------------------------ 3
 \section{Análisis con los conceptos de la Unidad 1}
@@ -123,7 +115,7 @@ Las transparencias de acceso, ubicación y replicación son completas porque el 
 
 \subsection{CAP y PACELC}
 
-El teorema CAP plantea que, cuando hay una partición de red, un sistema distribuido debe elegir entre consistencia y disponibilidad. PACELC completa la idea: si no hay partición, la elección pasa a ser entre latencia y consistencia. Ahmed et al. clasifican a Cassandra como PA/EL, es decir, ante una partición prioriza la disponibilidad y en operación normal prioriza la baja latencia, y ubican a MongoDB como PA/EC \cite[p.~172]{ahmed2023consistency}.
+El teorema CAP plantea que, cuando hay una partición de red, un sistema distribuido debe elegir entre consistencia y disponibilidad. PACELC completa la idea: si no hay partición, la elección pasa a ser entre latencia y consistencia. Ahmed et al. clasifican a Cassandra como PA/EL, es decir, ante una partición prioriza la disponibilidad y en operación normal prioriza la baja latencia. A HBase la ubican en el extremo opuesto, PC/EC, y en la clasificación CAP la ponen entre las bases CP, que dejan de estar disponibles antes que perder la consistencia \cite[p.~172]{ahmed2023consistency}.
 
 Mi experimento coincide con esa clasificación, con un matiz. Apagar un nodo no es exactamente una partición, pero desde el coordinador se ve igual: hay una réplica que no contesta. En esa situación ONE y QUORUM siguieron respondiendo, que es el lado A, y ALL se negó, que es el lado C (Sección~\ref{sec:fallo}). Con los tres nodos arriba, pedir más consistencia costó más tiempo, de 1,2 ms con ONE a 5,2 ms con ALL, que es el intercambio entre L y C que describe PACELC. Por eso pienso que en Cassandra la posición en CAP no es fija para todo el sistema. La decide cada consulta según el nivel de consistencia que pide el cliente, y la etiqueta PA/EL describe lo que pasa con los niveles bajos, que son los que se usan por defecto.
 
@@ -140,10 +132,6 @@ Los fallos se detectan con gossip. Cada segundo los nodos intercambian su estado
 Para recuperarse, Cassandra tiene dos mecanismos. Con \textit{hinted handoff}, el coordinador guarda las escrituras que iban para el nodo caído y se las entrega cuando vuelve, siempre que no pasen más de tres horas (el valor por defecto). Con \textit{repair} (\texttt{nodetool repair}), los nodos comparan sus datos y copian a cada réplica lo que le falta, lo que cubre los casos en que esas pistas ya expiraron. En mi prueba no escribí datos mientras \texttt{cass3} estaba apagado, así que no llegué a ver el hinted handoff en acción.
 
 Zhang et al. revisan los algoritmos de consenso tolerantes a fallos bizantinos, donde un nodo puede comportarse de forma arbitraria \cite{zhang2024byzantine}. Cassandra trabaja con un supuesto más simple: espera nodos que se caen, no nodos que mienten, y no usa consenso en cada escritura. Solo recurre a Paxos en las transacciones ligeras (\textit{lightweight transactions}).
-
-% COMPLETA TU: si el caso de tu FORM-AC-01 es de una base distribuida, cuéntalo aquí
-% en 3 o 4 frases (qué pasó, cuándo, qué falló y cómo se relaciona con gossip,
-% réplicas o quórum).
 
 % ------------------------------------------------------------ 4
 \section{Experimentación propia}
@@ -176,12 +164,6 @@ El primer intento no salió como esperaba. Ejecuté \texttt{docker compose up -d
   \includegraphics[width=0.85\textwidth]{Captura de pantalla 2026-11-14 110005.png}
   \caption{Los tres contenedores activos y los tres nodos en estado UN (repetición de la prueba, 10:59).}
 \end{figure}
-
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.85\textwidth]{Captura de pantalla 2026-11-14 XXXXXX.png}
-%   \caption{Los tres nodos en estado UN según \texttt{nodetool status}.}
-% \end{figure}
 
 \subsection{Prueba de fallo de un nodo}
 \label{sec:fallo}
@@ -234,22 +216,6 @@ Para capturar la pantalla repetí la prueba entre las 10:58 y las 11:00 con el m
 Hubo un detalle que no esperaba. Al activar \texttt{TRACING ON} con QUORUM, la fila sí llegó, pero \texttt{cqlsh} mostró \textit{Unable to fetch query trace} con \texttt{required\_replicas: 2} y \texttt{alive\_replicas: 1}. El error no venía de \texttt{uteq} sino de \texttt{system\_traces}, el keyspace donde Cassandra guarda las trazas, que por defecto tiene factor de replicación 2. Con \texttt{cass3} apagado, una de las dos copias de esa traza no estaba disponible, y QUORUM sobre RF = 2 necesita ambas. Así entendí que el factor de replicación se define por keyspace y que dos keyspaces del mismo clúster pueden reaccionar distinto ante la misma falla.
 
 
-
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.85\textwidth]{Captura de pantalla 2026-11-14 XXXXXX.png}
-%   \caption{\texttt{cass3} detenido y marcado como DN.}
-% \end{figure}
-
-
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.85\textwidth]{Captura de pantalla 2026-11-14 XXXXXX.png}
-%   \caption{Lectura con ALL rechazada: \texttt{required\_replicas: 3}, \texttt{alive\_replicas: 2}.}
-% \end{figure}
-
-
-
 \subsection{Latencia según el nivel de consistencia}
 
 Con los tres nodos activos otra vez, medí cuánto tarda la misma lectura (la fila \texttt{id = 1}, consultada desde \texttt{cass1}) con cada nivel. Usé un bucle en PowerShell de cinco rondas que en cada una ejecuta la consulta con ONE, QUORUM y ALL y toma el tiempo de la línea \textit{Request complete} del tracing. Los 15 valores quedaron en \texttt{latencias.txt} y el resumen está en la Tabla~\ref{tab:latencia}.
@@ -280,17 +246,8 @@ En promedio QUORUM tardó unas 3 veces lo que ONE y ALL unas 4 veces. El orden O
 La prueba tiene límites claros. Todo corre en un solo equipo, sin distancia de red entre los nodos, y son apenas cinco rondas. Gorbenko et al. encontraron diferencias de hasta 600\,\% entre niveles de consistencia con réplicas en regiones distintas \cite{gorbenko2021performance}. En mi caso la diferencia viene casi solo del trabajo de coordinar réplicas, porque los mensajes entre contenedores no salen de la máquina.
 
 
-% Capturas: pon las imágenes en figuras/ y descomenta.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.9\textwidth]{figuras/07_all_falla.png}
-%   \caption{Lectura con ALL rechazada con un nodo caído.}
-% \end{figure}
-
 % ------------------------------------------------------------ 5
 \section{Ejemplos de mi entorno}
-% REVISA: el ingeniero pide solo cosas que de verdad te pasaron. Cambia cualquier
-% detalle que no sea exacto (fechas, qué viste en pantalla).
 
 El primer ejemplo es el SGA de la UTEQ. En las semanas de matrículas y en las noches antes de que cierre una entrega, la plataforma se pone lenta y a veces una página no termina de cargar o me saca de la sesión. Muchos estudiantes entran al mismo tiempo y el servidor no alcanza a atender todas las peticiones. Esto tiene que ver con la disponibilidad y la escalabilidad: un sistema que funciona bien con carga normal deja de responder cuando la carga se multiplica. Cassandra ataca ese problema agregando nodos, porque cualquiera de ellos puede atender consultas.
 
@@ -299,28 +256,27 @@ El segundo ejemplo es WhatsApp. Me ha pasado que envío un mensaje y se queda co
 % ------------------------------------------------------------ 6
 \section{Análisis comparativo}
 
+
 \begin{table}[H]
   \centering
-  \caption{Comparación de Apache Cassandra y MongoDB.}
+  \caption{Comparación de Apache Cassandra y Apache HBase.}
   \label{tab:comparacion}
   \begin{tabularx}{\textwidth}{lXX}
     \toprule
-    Criterio & Apache Cassandra & MongoDB \\
+    Criterio & Apache Cassandra & Apache HBase \\
     \midrule
-    Arquitectura & Sin maestro; anillo de nodos iguales. & Conjunto de réplicas con un nodo primario y varios secundarios. \\
-    CAP / PACELC & PA/EL \cite[p.~172]{ahmed2023consistency}. & PA/EC \cite[p.~172]{ahmed2023consistency}. \\
-    Replicación & Multimaestro; cualquier réplica acepta escrituras y el RF se define por keyspace. & Las escrituras van al primario y los secundarios copian su registro de operaciones. \\
-    Comunicación & Peer-to-peer entre nodos y CQL entre cliente y coordinador. & El cliente escribe en el primario; los secundarios replican desde él. \\
-    Tolerancia a fallos & Sigue respondiendo según el nivel de consistencia pedido. & Si cae el primario, los secundarios eligen uno nuevo y mientras tanto no se aceptan escrituras. \\
+    Arquitectura & Sin maestro; anillo de nodos iguales. & Un HMaster y varios RegionServers; ZooKeeper coordina el clúster. \\
+    CAP / PACELC & PA/EL \cite[p.~172]{ahmed2023consistency}. & PC/EC \cite[p.~172]{ahmed2023consistency}. \\
+    Replicación & Cualquier réplica acepta escrituras y el RF se define por keyspace. & Cada región la atiende un solo RegionServer; las copias de los archivos las hace HDFS. \\
+    Comunicación & Peer-to-peer entre nodos y CQL entre cliente y coordinador. & El cliente busca en la tabla de metadatos qué RegionServer tiene la fila y le escribe directamente. \\
+    Tolerancia a fallos & Sigue respondiendo según el nivel de consistencia pedido. & Si cae un RegionServer, el HMaster reasigna sus regiones; mientras tanto esas filas no responden. \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-La diferencia de fondo está en quién puede escribir. En Cassandra cualquier nodo acepta escrituras, así que la carga se reparte y la caída de un nodo no detiene al sistema. En MongoDB todas las escrituras pasan por el primario, lo que hace más fácil leer siempre el dato más reciente, pero cuando el primario cae hay unos segundos sin escrituras hasta que se elige uno nuevo.
+La diferencia de fondo está en cuántos servidores pueden atender una misma fila. En Cassandra lo hacen las tres réplicas, y el cliente decide a cuántas espera. En HBase solo la atiende el RegionServer dueño de esa región, así que una lectura siempre devuelve el último valor escrito, pero si ese servidor se cae, sus filas quedan sin servicio hasta que el HMaster las pasa a otro. Algo parecido vi en mi experimento con ALL: Cassandra también puede dejar de responder para no entregar un dato dudoso, solo que ahí lo elige el cliente y en HBase viene así por diseño.
 
-Por eso, para una aplicación con muchas escrituras repartidas, como registros de sensores, historiales de actividad o mensajes, Cassandra encaja mejor. Para una aplicación donde importa leer siempre el valor actualizado y el volumen de escrituras es moderado, MongoDB es más sencillo de usar sin pensar en niveles de consistencia. Ferreira et al. estudian justamente cómo cambian el rendimiento y el comportamiento de estas bases según el nivel de consistencia configurado \cite{ferreira2024impacts,ferreira2025experimental}, y mi experimento muestra la misma idea a escala pequeña: en Cassandra la consistencia fuerte existe, pero hay que pedirla y pagarla en latencia.
-% REVISA: si en tus PDFs de Ferreira hay un número concreto (por ejemplo, cuánto baja el
-% rendimiento con QUORUM o ALL), agrégalo aquí con la página.
+En rendimiento, Cui y Chen compararon las dos bases con YCSB y encontraron que Cassandra es más rápida en lecturas y escrituras simples, mientras que HBase lee mejor cuando la carga mezcla lecturas y escrituras \cite{cui2021performance}. Por eso, para una aplicación con muchas escrituras repartidas, como registros de sensores, historiales de actividad o reservas, Cassandra encaja mejor. HBase tiene más sentido cuando ya existe un entorno Hadoop y los datos se van a analizar en lote, o cuando leer siempre el valor actualizado pesa más que seguir respondiendo con un servidor caído.
 \newpage
 % ------------------------------------------------------------ 7
 \section{Postura crítica}
@@ -339,7 +295,7 @@ En mi clúster de tres nodos, leer con ALL tomó en promedio 5,2 ms frente a 1,2
 % ------------------------------------------------------------ 9
 \section*{Declaración de uso de inteligencia artificial}
 
-Usé Claude (Anthropic), modelo Claude Opus 5.5, para preparar el \texttt{docker-compose.yml} y los comandos del experimento; ordenar en \texttt{resultados.txt} y \texttt{comandos.md} las salidas que obtuve en mi terminal; armar la estructura del archivo \LaTeX{} y del archivo de referencias; proponer un guion con las preguntas de cada sección; redactar la Introducción y los párrafos de apertura de las Secciones 3 y 4 a partir de mis textos, y revisar la redacción y las horas del experimento contra mi registro de PowerShell. Las demás secciones las redacté yo. Para verificar, ejecuté todos los comandos en mi equipo, comparé cada número del informe con mis capturas y con los archivos de \texttt{experimento/}, y abrí cada DOI para comprobar autores, año, título, revista, volumen y páginas.
+Usé Claude (Anthropic), modelo Claude Opus 5.5, para preparar el \texttt{docker-compose.yml} y los comandos del experimento; ordenar en \texttt{resultados.txt} y \texttt{comandos.md} las salidas que obtuve en mi terminal; armar la estructura del archivo \LaTeX{} y del archivo de referencias; proponer un guion con las preguntas de cada sección; redactar la Introducción y los párrafos de apertura de las Secciones 3 y 4 a partir de mis textos; pasar a draw.io el esquema que dibujé a mano; ubicar en los artículos los pasajes del Anexo B, y revisar la redacción y las horas del experimento contra mi registro de PowerShell. Al principio comparé Cassandra con MongoDB, pero ese tema ya lo había tomado una compañera; al cambiar a HBase usé Claude para buscar y verificar las dos referencias nuevas y redactar los cambios del Resumen, la Introducción y las Secciones 3.2 y 6. Las demás secciones las redacté yo. Para verificar, ejecuté todos los comandos en mi equipo, comparé cada número del informe con mis capturas y con los archivos de \texttt{experimento/}, y abrí cada DOI para comprobar autores, año, título, revista, volumen y páginas.
 \newpage
 % ------------------------------------------------------------ REFERENCIAS
 \printbibliography[title={Referencias}]
@@ -349,7 +305,6 @@ Usé Claude (Anthropic), modelo Claude Opus 5.5, para preparar el \texttt{docker
 \section{Esquema inicial a mano}
 
 Este es el primer esquema del clúster que dibujé a mano antes de montar el experimento, con mi nombre y la fecha.
-% Sube la foto a figuras/esquema_a_mano.jpg y descomenta.
 \begin{figure}[H]
 \centering
  \includegraphics[width=0.8\textwidth]{Diagrama-Cassandra-en-cuaderno-cuadriculado.png}
@@ -364,11 +319,10 @@ Este es el primer esquema del clúster que dibujé a mano antes de montar el exp
 Estas capturas muestran los pasajes que resalté en los artículos y que cito en el informe.
 
 
-
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.7\textwidth]{lectura_ahmed_p172.png}
-  \caption{Ahmed et al., p.~172: clasificación PACELC de Cassandra (PA/EL) y MongoDB (PA/EC). Citado en la Sección~3.2 y en la Tabla~4 \cite[p.~172]{ahmed2023consistency}.}
+  \includegraphics[width=0.7\textwidth]{Captura de pantalla 2026-11-15 144056.png}
+  \caption{Ahmed et al., p.~172: clasificación PACELC de Cassandra (PA/EL) y HBase (PC/EC). Citado en la Sección~3.2 y en la Tabla~\ref{tab:comparacion} \cite[p.~172]{ahmed2023consistency}.}
 \end{figure}
 
 \begin{figure}[H]
